@@ -1,0 +1,58 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  claude-review:
+    if: |
+      !contains(github.event.pull_request.title, '[skip-review]')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Review this pull request for the Shortiee URL shortener project.
+
+            Project-specific conventions to check against (see CLAUDE.md and
+            .claude/skills/shortiee-conventions/ for full detail):
+            - Strict layering: routers -> services -> repositories -> models.
+              Routers must stay thin (no business logic, no direct DB/Redis
+              calls); services must depend on repository interfaces, not
+              SQLAlchemy directly; repositories are the only layer allowed
+              to touch SQL/ORM.
+            - Every I/O-touching function (DB, Redis) must be async def,
+              using asyncpg/SQLAlchemy async and redis.asyncio — flag any
+              sync driver or blocking call on a hot path.
+            - Auth: JWT lives only in an httpOnly cookie, never localStorage
+              or frontend JS. Passwords/tokens/cookies must never be logged.
+            - Every feature or bug fix must ship with tests (pytest +
+              pytest-asyncio for backend, Vitest + React Testing Library for
+              frontend) — flag missing coverage for new logic.
+            - No .env or secrets/credentials files should be touched by a PR.
+
+            Also review generally for:
+            - Correctness and potential bugs
+            - Security concerns (especially around auth, rate limiting, and
+              anything touching user input)
+            - Performance considerations
+            - Adherence to SOLID principles and DRY
+
+            Be constructive and specific — reference file names and line
+            numbers where possible. If everything looks good, say so briefly
+            rather than inventing nitpicks.
+          claude_args: '--allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"'
