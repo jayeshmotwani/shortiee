@@ -54,18 +54,31 @@ try {
   allow();
 }
 
-const command = (payload && payload.tool_input && payload.tool_input.command) || "";
-if (!command) allow();
+const rawCommand = (payload && payload.tool_input && payload.tool_input.command) || "";
+if (!rawCommand) allow();
 
+// Strip heredoc bodies (e.g. `git commit -m "$(cat <<'EOF' ... EOF)"`) before scanning —
+// otherwise commit-message text can accidentally contain substrings like " -f " and
+// trip the force-push/commit detection below on content, not on an actual git invocation.
+function stripHeredocs(cmd) {
+  return cmd.replace(/<<-?\s*['"]?(\w+)['"]?[\s\S]*?\n\s*\1\b/g, " ");
+}
+const scrubbed = stripHeredocs(rawCommand);
+
+// Split into individual shell statements so flag checks only apply within the
+// statement that actually invokes `git push`/`git commit`, not the whole command line.
+const statements = scrubbed.split(/&&|\|\||;|\n/).map((s) => s.trim());
+
+const pushStatement = statements.find((s) => /^git\s+push\b/.test(s));
 const isForcePush =
-  /\bgit\s+push\b/.test(command) &&
-  (/(^|\s)--force(-with-lease)?(\s|$)/.test(command) || /(^|\s)-f(\s|$)/.test(command));
+  !!pushStatement &&
+  (/(^|\s)--force(-with-lease)?(\s|$)/.test(pushStatement) || /(^|\s)-f(\s|$)/.test(pushStatement));
 
 if (isForcePush) {
   deny("Force-push is disabled by project policy (see CLAUDE.md / .claude/settings.json hooks). Ask the user before force-pushing.");
 }
 
-const isCommit = /\bgit\s+commit\b/.test(command);
+const isCommit = statements.some((s) => /^git\s+commit\b/.test(s));
 if (!isCommit) allow();
 
 let branch = "";

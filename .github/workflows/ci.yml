@@ -10,25 +10,16 @@ jobs:
   backend-lint:
     name: Backend lint (ruff)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install dependencies
+      - name: Lint backend (skips gracefully until backend/pyproject.toml exists)
         run: |
-          if [ -f pyproject.toml ]; then
+          if [ -f backend/pyproject.toml ]; then
             pip install ruff
-          else
-            echo "backend not scaffolded yet — skipping"
-          fi
-      - name: Run ruff
-        run: |
-          if [ -f pyproject.toml ]; then
-            ruff check .
+            (cd backend && ruff check .)
           else
             echo "backend not scaffolded yet — skipping"
           fi
@@ -36,25 +27,15 @@ jobs:
   frontend-lint:
     name: Frontend lint (eslint)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Install dependencies
+      - name: Lint frontend (skips gracefully until frontend/package.json exists)
         run: |
-          if [ -f package.json ]; then
-            npm ci
-          else
-            echo "frontend not scaffolded yet — skipping"
-          fi
-      - name: Run eslint
-        run: |
-          if [ -f package.json ]; then
-            npm run lint --if-present
+          if [ -f frontend/package.json ]; then
+            (cd frontend && npm ci && npm run lint --if-present)
           else
             echo "frontend not scaffolded yet — skipping"
           fi
