@@ -1,0 +1,39 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Node / frontend ---
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+*.local
+
+# --- Docker ---
+docker-compose.override.yml
+
+# --- Env / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- IDE ---
+.vscode/
+.idea/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Claude Code project-local state ---
+.claude/settings.local.json
+.claude/.last-test-run

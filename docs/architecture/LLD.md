@@ -1,0 +1,3 @@
+# Low-Level Design
+
+> Stub — filled in during Task 11. Will cover: per-class responsibilities for `UrlService`, `AuthService`, `AbstractRepository`/`UrlRepository`/`UserRepository`, `ShortCodeGenerator`, `CacheService`, `RateLimiter`; the SOLID mapping (SRP/OCP/LSP/ISP/DIP applied to this codebase); the retry-on-conflict short-code algorithm and the JWT issue/verify/cookie flow as pseudocode; the CSRF reasoning behind the httpOnly-cookie auth design; logging conventions; and the exception taxonomy (`CodeGenerationExhausted`, `UrlNotFound`, `RateLimitExceeded`, `InvalidCredentials`, `EmailAlreadyRegistered`, `Unauthorized`) with its HTTP status mapping.
